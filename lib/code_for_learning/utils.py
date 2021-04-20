@@ -26,7 +26,7 @@ def get_data(args):
 
 
 def multiprocess_text(model, data, workers=5):
-    chunks = np.array_split(data, 10)
+    chunks = np.array_split(data, workers)
     LOGGER.info("Start text processing")
     start_time = time.time()
     with mp.Pool(workers) as p:
@@ -45,8 +45,8 @@ def get_json(data_path):
 def parse_args():
     """ Parse command line arguments """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train", type=Path, required=True)
-    parser.add_argument("--test", type=Path, default=None)
+    parser.add_argument("--train", type=Path, default="/hiring-test-data/train.csv")
+    parser.add_argument("--test", type=Path, default="/hiring-test-data/test.csv")
     parser.add_argument("-o", "--output", type=Path, default="/hiring-test-data/prediction.csv")
     return parser.parse_args()
 

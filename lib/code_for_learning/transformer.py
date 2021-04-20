@@ -29,11 +29,11 @@ class Vectorizer(object):
         return self
 
     def transform(self, X):
-        tfidf_features = self.tfidf.transform(X[self.text_col])
-        cat_features = self.ohe.transform(X[self.cat_cols])
+        # tfidf_features = self.tfidf.transform(X[self.text_col])
+        # cat_features = self.ohe.transform(X[self.cat_cols])
         x = X.loc[:, ["price"]]
         x["price"] = np.log10(x["price"].fillna(0.0) + 1.0)
-        return hstack((tfidf_features, cat_features, x[["price"]]))
+        return hstack((self.tfidf.transform(X[self.text_col]), self.ohe.transform(X[self.cat_cols]), x[["price"]]))
 
     def fit_transform(self, X):
         self.fit(X)

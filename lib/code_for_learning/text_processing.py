@@ -1,6 +1,10 @@
 import re
 
-from pymystem3 import Mystem
+# from pymystem3 import Mystem
+from tqdm import tqdm
+# from pymorphy2 import MorphAnalyzer
+from razdel import tokenize
+from nltk.stem.snowball import SnowballStemmer
 
 
 class TextNormalizer(object):
@@ -12,7 +16,9 @@ class TextNormalizer(object):
         :param names: Dict with russian given first names
         :param digits: Dict with alphabetic numbers mapping
         """
-        self.stem = Mystem()
+        # self.stem = Mystem()
+        self.stem = SnowballStemmer("russian")
+        # self.morph = MorphAnalyzer(lang="ru")
         self.re_number = re.compile("(\d+)")
 
         # https://betterprogramming.pub/detecting-external-links-in-a-paragraph-of-text-with-javascript-automatically-3c15537f4997
@@ -30,20 +36,22 @@ class TextNormalizer(object):
         return text
 
     def tokenize(self, text):
-        for token in self.stem.lemmatize(text):
+        # for token in tokenize(text):
+        #     token = self.morph.parse(token.text)[0].normal_form
+        for token in tokenize(text):
+            token = self.stem.stem(token.text)
             token = re.sub("[^0-9а-яА-Яa-zA-Z@#]+", "", token)
             if token in self.digits:
                 yield str(self.digits[token])
             elif token in self.names:
                 yield "TOKENNAME"
-            #             token = re.sub("[^0-9а-яА-Яa-zA-Z@#]+", "", token)
             elif (not token.isalpha()) or (len(token) > 2) or (token in self.DOMENS):
                 yield token
             elif token in self.DOMENS:
                 yield "TOKENWEB"
 
     def normal_generator(self, text_col):
-        for text in text_col:
+        for text in tqdm(text_col):
             text = text.lower()
             text = self.replace_url(text)
             text = self.re_number.sub(" \g<1> ", text)
@@ -54,4 +62,4 @@ class TextNormalizer(object):
 
     def fit_transform(self, X):
         X["text"] = list(self.normal_generator(X["description"] + " " + X["title"]))
-        return X
+        return X.drop(columns=["description", "title", "datetime_submitted", "city"])

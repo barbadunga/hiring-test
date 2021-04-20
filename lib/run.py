@@ -5,14 +5,14 @@ from pathlib import Path
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
-from lib.code_for_learning.utils import auc_by_category, parse_args, get_data, get_json, multiprocess_text
-from lib.code_for_learning.text_processing import TextNormalizer
-from lib.code_for_learning.transformer import Vectorizer
+from code_for_learning.utils import auc_by_category, parse_args, get_data, get_json, multiprocess_text
+from code_for_learning.text_processing import TextNormalizer
+from code_for_learning.transformer import Vectorizer
 
 logging.basicConfig(format='%(asctime)-15s | %(levelname)s | %(name)s | %(message)s', level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
-DATA_PATH = Path("../data")
+DATA_PATH = Path("/src/data")
 
 
 def save_prediction(y_pred, path):
@@ -29,15 +29,18 @@ def main():
     train, test = get_data(args)
     first_names = get_json(DATA_PATH / "valid_names.json")
     digits = get_json(DATA_PATH / "digits.json")
-    train = train
-    test = test
+
     # prepare text features
     text_normalize = TextNormalizer(names=first_names, digits=digits)
     LOGGER.info("Processing train text ...")
-    train = multiprocess_text(text_normalize, train)
+    # train = multiprocess_text(text_normalize, train, workers=3)
+    train = text_normalize.fit_transform(train)
     LOGGER.info("Processing test text ...")
-    test = multiprocess_text(text_normalize, test)
+    # test = multiprocess_text(text_normalize, test, workers=3)
+    test = text_normalize.fit_transform(test)
+    import gc
 
+    gc.collect()
     # feature extraction
     LOGGER.info("Generating training dataset ...")
     vectorizer = Vectorizer(
@@ -63,20 +66,12 @@ def main():
     save_prediction(y_pred[:, 1], args.output)
     LOGGER.info("Saved prediction to %s" % args.output)
 
-    import numpy as np
-
-    names = vectorizer.columns_
-    coef = model.coef_.ravel()
-    for i in np.argsort(coef)[-100:]:
-        print("%s: %f" % (names[i], coef[i]))
-
 
 if __name__ == '__main__':
     exit_code = 0
     try:
         main()
     except Exception as err:
-        LOGGER.error(err)
+        LOGGER.error(err.with_traceback())
         exit_code = 1
     sys.exit(exit_code)
-
