@@ -10,4 +10,4 @@ WORKDIR /src
 
 RUN pip install -r requirements.txt
 
-CMD python lib/run.py
+CMD ["python", "lib/run.py"]
