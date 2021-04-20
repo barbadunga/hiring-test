@@ -55,7 +55,7 @@ def main():
     LOGGER.info("Get data with shape %dx%d" % (X_test.shape[0], X_test.shape[1]))
 
     # train model
-    model = LogisticRegression(C=1.0, penalty="l1", n_jobs=-1, solver="liblinear", random_state=42, verbose=1)
+    model = LogisticRegression(C=1.0, penalty="l1", solver="liblinear", random_state=42, verbose=1)
     LOGGER.info("Start training")
     model = model.fit(X_train, train["is_bad"])
 
